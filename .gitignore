@@ -1,8 +1,0 @@
-tags
-*.o
-minimap2
-minimap2_avx
-minimap2_ksw2_avx
-minimap2_sketch_avx
-*.a
-.DS_Store
