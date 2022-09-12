@@ -1,0 +1,21 @@
+./minimap2 -x sr -t 1 -n 1 -Z 10 -W 2 -i 2 -k 12 -w 8 -a --print-seeds --secondary=yes ../dummy.fasta ../dummy.fastq
+
+
+
+sbatch -c 40 --wrap="/home/alserm/minimap2-alser/minimap2-20Jan2022/minimap2 -x sr -t 1 -n 1 -Z 10 -W 2 -i 2 -k 12 -w 8 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/SRR826471_1_12Reads.fastq > genome_SRR826471_1_12Reads.txt"
+
+
+sbatch -c 40 --wrap="time /home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -x sr -t 1 -n 1 -k 12 -w 8 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/SRR826471_1_40Klines.fastq > minimap2.txt"
+
+
+
+
+
+/usr/bin/time -v /home/alserm/minimap2-alser/minimap2-20Jan2022/minimap2 -x sr -t 1 -n 4 -Z 10 -W 2 -i 2 -k 12 -w 8 --print-seeds -a --secondary=yes test/dummy.fasta test/dummy.fastq |& tee tst.txt
+
+
+/usr/bin/time -v /home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -x sr -t 1 -n 1 -k 12 -w 8 -a --secondary=yes test/dummy.fasta test/dummy.fastq |& tee tst.txt
+
+
+
+
