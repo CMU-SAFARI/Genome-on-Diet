@@ -1,0 +1,112 @@
+void mm_sketch2wrong(void *km, const char *str, int len, int w, int k, uint32_t rid, int is_hpc, mm128_v *p, const char *T, int N)
+{
+	printf("hello 0\n");
+	uint64_t shift1 = 2 * (k - 1), mask = (1ULL<<2*k) - 1, kmer[2] = {0,0};
+	int i, j, l, buf_pos, min_pos, kmer_span = 0;
+	mm128_t buf[256], min = { UINT64_MAX, UINT64_MAX };
+	tiny_queue_t tq;
+
+	assert(len > 0 && (w > 0 && w < 256) && (k > 0 && k <= 28)); // 56 bits for k-mer; could use long k-mers, but 28 enough in practice
+	memset(buf, 0xff, w * 16);
+	memset(&tq, 0, sizeof(tiny_queue_t));
+	kv_resize(mm128_t, km, *p, p->n + len/w);
+
+	// Own Ideas
+	
+	int pattern[2] = {1, 0}; // determine the pattern
+	int pattern_len = sizeof(pattern) / sizeof(pattern[0]); // determine length of pattern
+	
+	// calculate the new_size
+	int new_size;
+	int ones = 0; // amount of ones in the pattern
+	
+	for(int g = 0; g < pattern_len; ++g){
+		if(pattern[g] == 1) ++ones; // count the ones in the pattern
+	}
+	
+	new_size = (len / pattern_len)*ones; // determine the new size
+	printf("hello 1\n");
+	
+	if(len % pattern_len != 0){ // loop if the pattern is interrupted in the middle
+		for(int m = 0; m < (len % pattern_len); ++m){
+			if(pattern[m] == 1) ++new_size;
+		}
+	}
+	printf("hello 2\n");
+	
+	char *new_genome = (char *)malloc(sizeof(char) * new_size); // allocate memory for the shortened sequence
+	
+	int current = 0; // gives the position of the base in the new_genome
+	int f = 0; // goes to the end of the old genome
+	
+	printf("hello 3\n");
+	while(f < len){
+		for(int r = 0; r < pattern_len; ++r){
+			if(pattern[r] == 1){
+				new_genome[current] = str[f];
+				++current;
+			}
+			++f;
+		}
+	}
+	printf("hello 4\n");
+	len = new_size; // update the len
+	
+	//Print the new Genome to check
+	printf("\nNew Genome: ");
+	for(int p = 0; p < len; ++p){
+		printf("%c", new_genome[p]);
+		if ((p+1) % k == 0) printf("\t");
+	}
+	printf("\n");
+	printf("hello 5\n");
+	// Original Code
+	for (i = l = buf_pos = min_pos = 0; i < (2*k)-1; ++i) {
+			int c = seq_nt4_table[(uint8_t)new_genome[i]];
+			//printf("%c\t%d\n", new_genome[i],c); // print the k-mers
+			//if ((i+1) % k == 0) printf(" %d\n", k); // give the length of a k-mer
+			mm128_t info = { UINT64_MAX, UINT64_MAX };
+			if (c < 4) { // not an ambiguous base
+				int z;
+				if (is_hpc) {
+					int skip_len = 1;
+					if (i + 1 < len && seq_nt4_table[(uint8_t)new_genome[i + 1]] == c) {
+						for (skip_len = 2; i + skip_len < len; ++skip_len)
+							if (seq_nt4_table[(uint8_t)new_genome[i + skip_len]] != c)
+								break;
+						i += skip_len - 1; // put $i at the end of the current homopolymer run
+					}
+					tq_push(&tq, skip_len);
+					kmer_span += skip_len;
+					if (tq.count > k) kmer_span -= tq_shift(&tq);
+				} else kmer_span = l + 1 < k? l + 1 : k;
+				kmer[0] = (kmer[0] << 2 | c) & mask;           // forward k-mer
+				kmer[1] = (kmer[1] >> 2) | (3ULL^c) << shift1; // reverse k-mer
+				if (kmer[0] == kmer[1]) continue; // skip "symmetric k-mers" as we don't know it strand
+				z = kmer[0] < kmer[1]? 0 : 1; // strand
+				++l;
+				if (l >= k && kmer_span < 256) {
+					info.x = hash64(kmer[z], mask) << 8 | kmer_span;
+					printf("Sketch2\t");
+					//printbits(kmer[z],24);
+					//printf("\n");
+					//printf("kmer[0]\t");
+					printbits(kmer[0],24);
+					//printf("\n");
+					//printf("kmer[1]\t");
+					//printbits(kmer[1],24);
+					printf("\n");
+					printbits(info.x,64);
+					printf("\n");
+					bits2let(kmer[0]);
+					printf("\n");
+					info.y = (uint64_t)rid<<32 | (uint32_t)i<<1 | z;
+					kv_push(mm128_t, km, *p, info);
+				}
+			} else l = 0, tq.count = tq.front = 0, kmer_span = 0;
+		
+	}
+	if (min.x != UINT64_MAX)
+		kv_push(mm128_t, km, *p, min);
+	printf("hello 6\n");
+}
