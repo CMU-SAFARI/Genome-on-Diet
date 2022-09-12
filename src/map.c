@@ -523,11 +523,11 @@ static inline void vote(const loc_t *const loc, const unsigned len, const int st
 				    (str ? extracted_len : -(extracted_len + tmp_extracted_len));
 				uint32_t chrom_id = target_loc >> 32;
 				*recovery         = (vt_t){.chrom_id        = chrom_id,
-                                                   .target_loc      = potential_target_loc,
-                                                   .first_query_loc = first_query_loc,
-                                                   .last_query_loc  = last_query_loc,
-                                                   .str             = str,
-                                                   .score           = counter};
+				                           .target_loc      = potential_target_loc,
+				                           .first_query_loc = first_query_loc,
+				                           .last_query_loc  = last_query_loc,
+				                           .str             = str,
+				                           .score           = counter};
 			}
 			target_loc      = cur.target;
 			first_query_loc = cur.query;
@@ -574,11 +574,11 @@ static inline void vote(const loc_t *const loc, const unsigned len, const int st
 		    (int32_t)(target_loc & UINT32_MAX) + (str ? extracted_len : -(extracted_len + tmp_extracted_len));
 		uint32_t chrom_id = target_loc >> 32;
 		*recovery         = (vt_t){.chrom_id        = chrom_id,
-                                   .target_loc      = potential_target_loc,
-                                   .first_query_loc = first_query_loc,
-                                   .last_query_loc  = last_query_loc,
-                                   .str             = str,
-                                   .score           = counter};
+		                           .target_loc      = potential_target_loc,
+		                           .first_query_loc = first_query_loc,
+		                           .last_query_loc  = last_query_loc,
+		                           .str             = str,
+		                           .score           = counter};
 	}
 	vt->nb_potentials = out_len;
 }
@@ -784,37 +784,67 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 		int32_t target_end   = vt.potentials[i].target_loc;
 
 		// Get the ref sequence
-		int32_t tlen = mi->seq[target_id].len;
-		if (str) {
-			if (target_end > tlen - 1) {
-				start_offset = target_end - (tlen - 1);
-				target_end   = tlen - 1;
-			} else {
-				start_offset = 0;
+		// TODO: parametrize
+		if (qlen_sum > 300) {
+			if (vt.potentials[i].first_query_loc == vt.potentials[i].last_query_loc) {
+				if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
+					fprintf(stderr, "SKIPPED");
+				}
+				continue;
 			}
-			if (target_end < qlen_sum - start_offset - 1) {
-				end_offset   = start_offset + target_end;
-				target_start = 0;
+			start_offset = vt.potentials[i].first_query_loc - (mi->k - 1);
+			end_offset   = vt.potentials[i].last_query_loc;
+			if (str) {
+				target_end -= start_offset;
+				target_start -= end_offset;
+				if (target_start < 0) {
+					end_offset += target_start;
+					target_start = 0;
+				}
+				qs = &qs_rev[qlen_sum - 1 - end_offset];
 			} else {
-				end_offset   = qlen_sum - 1;
-				target_start = target_end - (end_offset - start_offset);
+				int32_t tlen = mi->seq[target_id].len;
+				target_start += start_offset;
+				target_end += end_offset;
+				if (target_end + 1 > tlen) {
+					end_offset = tlen - 1 - target_start + start_offset;
+					target_end = tlen - 1;
+				}
+				qs = &qs_for[start_offset];
 			}
-			qs = &qs_rev[qlen_sum - 1 - end_offset];
 		} else {
-			if (target_start < 0) {
-				start_offset = -target_start;
-				target_start = 0;
+			int32_t tlen = mi->seq[target_id].len;
+			if (str) {
+				if (target_end > tlen - 1) {
+					start_offset = target_end - (tlen - 1);
+					target_end   = tlen - 1;
+				} else {
+					start_offset = 0;
+				}
+				if (target_end < qlen_sum - start_offset - 1) {
+					end_offset   = start_offset + target_end;
+					target_start = 0;
+				} else {
+					end_offset   = qlen_sum - 1;
+					target_start = target_end - (end_offset - start_offset);
+				}
+				qs = &qs_rev[qlen_sum - 1 - end_offset];
 			} else {
-				start_offset = 0;
+				if (target_start < 0) {
+					start_offset = -target_start;
+					target_start = 0;
+				} else {
+					start_offset = 0;
+				}
+				if (tlen - target_start < qlen_sum - start_offset) {
+					end_offset = tlen - 1 - target_start + start_offset;
+					target_end = tlen - 1;
+				} else {
+					end_offset = qlen_sum - 1;
+					target_end = target_start + (end_offset - start_offset);
+				}
+				qs = &qs_for[start_offset];
 			}
-			if (tlen - target_start < qlen_sum - start_offset) {
-				end_offset = tlen - 1 - target_start + start_offset;
-				target_end = tlen - 1;
-			} else {
-				end_offset = qlen_sum - 1;
-				target_end = target_start + (end_offset - start_offset);
-			}
-			qs = &qs_for[start_offset];
 		}
 		uint32_t len = end_offset - start_offset + 1;
 		mm_idx_getseq2(mi, 0, target_id, target_start, target_end + 1, ts);
