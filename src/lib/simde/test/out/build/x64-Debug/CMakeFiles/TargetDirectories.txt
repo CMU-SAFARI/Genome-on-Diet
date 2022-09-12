@@ -1,7 +1,0 @@
-C:/Users/fchri/Qsync/ETH/5. Semester/Genome Analysis/minimap2_github/lib/simde/test/out/build/x64-Debug/CMakeFiles/simde-test-native.dir
-C:/Users/fchri/Qsync/ETH/5. Semester/Genome Analysis/minimap2_github/lib/simde/test/out/build/x64-Debug/CMakeFiles/munit.dir
-C:/Users/fchri/Qsync/ETH/5. Semester/Genome Analysis/minimap2_github/lib/simde/test/out/build/x64-Debug/CMakeFiles/simde-test-emul.dir
-C:/Users/fchri/Qsync/ETH/5. Semester/Genome Analysis/minimap2_github/lib/simde/test/out/build/x64-Debug/CMakeFiles/run-tests.dir
-C:/Users/fchri/Qsync/ETH/5. Semester/Genome Analysis/minimap2_github/lib/simde/test/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
-C:/Users/fchri/Qsync/ETH/5. Semester/Genome Analysis/minimap2_github/lib/simde/test/out/build/x64-Debug/CMakeFiles/test.dir
-C:/Users/fchri/Qsync/ETH/5. Semester/Genome Analysis/minimap2_github/lib/simde/test/out/build/x64-Debug/CMakeFiles/edit_cache.dir

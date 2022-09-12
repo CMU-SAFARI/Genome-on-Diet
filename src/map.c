@@ -900,8 +900,13 @@ printf("bw: %u, bw_frac: %f, bw_min: %u, bw_max: %u\n", bw, opt->bw_frac, opt->b
        opt->bw_max);
        */
 
+#ifdef __AVX512BW__
+			ksw_extd2_avx512(b->km, len, qs, len, ts, 5, mat, opt->q, opt->e, opt->q2, opt->e2, bw,
+			                 opt->zdrop, opt->end_bonus, flag, &ez);
+#else
 			ksw_extd2_sse(b->km, len, qs, len, ts, 5, mat, opt->q, opt->e, opt->q2, opt->e2, bw, opt->zdrop,
 			              opt->end_bonus, flag, &ez);
+#endif
 		}
 
 		mm_reg1_t r_tmp = {.rid   = target_id,

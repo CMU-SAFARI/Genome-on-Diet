@@ -1,3 +1,3 @@
 # Genome-on-Diet
 
-Coming Soon ... Check again in a few days :)
+To build everything, simply run `make`

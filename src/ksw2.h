@@ -2,6 +2,7 @@
 #define KSW2_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define KSW_NEG_INF -0x40000000
 
@@ -71,6 +72,10 @@ void ksw_exts2_sse(void *km, int qlen, const uint8_t *query, int tlen, const uin
 				   int8_t gapo, int8_t gape, int8_t gapo2, int8_t noncan, int zdrop, int8_t junc_bonus, int flag, const uint8_t *junc, ksw_extz_t *ez);
 
 void ksw_extf2_sse(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t mch, int8_t mis, int8_t e, int w, int xdrop, ksw_extz_t *ez);
+
+	
+void exact_match_sse(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t m, const int8_t *mat,
+				   int8_t q, int8_t e, int w, int zdrop, int end_bonus, int flag, ksw_extz_t *ez, bool *exact_match, int *mismatch_cnt);
 
 /**
  * Global alignment

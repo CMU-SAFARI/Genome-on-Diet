@@ -1,6 +1,6 @@
 #!/usr/bin/env k8
 
-var paftools_version = '2.22-r1101';
+var paftools_version = '2.24-r1132-dirty';
 
 /*****************************
  ***** Library functions *****
@@ -1532,21 +1532,24 @@ function paf_view(args)
 
 function paf_gff2bed(args)
 {
-	var c, fn_ucsc_fai = null, is_short = false, keep_gff = false, print_junc = false;
-	while ((c = getopt(args, "u:sgj")) != null) {
+	var c, fn_ucsc_fai = null, is_short = false, keep_gff = false, print_junc = false, output_gene = false, ens_canon_only = false;
+	while ((c = getopt(args, "u:sgjGe")) != null) {
 		if (c == 'u') fn_ucsc_fai = getopt.arg;
 		else if (c == 's') is_short = true;
 		else if (c == 'g') keep_gff = true;
 		else if (c == 'j') print_junc = true;
+		else if (c == 'G') output_gene = true;
+		else if (c == 'e') ens_canon_only = true;
 	}
 
 	if (getopt.ind == args.length) {
 		print("Usage: paftools.js gff2bed [options] <in.gff>");
 		print("Options:");
-		print("  -j       Output junction BED");
-		print("  -s       Print names in the short form");
+		print("  -j       output junction BED");
+		print("  -s       print names in the short form");
 		print("  -u FILE  hg38.fa.fai for chr name conversion");
-		print("  -g       Output GFF (used with -u)");
+		print("  -e       only show transcript tagged with 'Ensembl_canonical'");
+		print("  -g       output GFF (used with -u)");
 		exit(1);
 	}
 
@@ -1605,8 +1608,10 @@ function paf_gff2bed(args)
 		print(a[0][0], st, en, name, 1000, a[0][3], cds_st, cds_en, color, a.length, sizes.join(",") + ",", starts.join(",") + ",");
 	}
 
-	var re_gtf = /\b(transcript_id|transcript_type|transcript_biotype|gene_name|gene_id|gbkey|transcript_name) "([^"]+)";/g;
+	var re_gtf  = /\b(transcript_id|transcript_type|transcript_biotype|gene_name|gene_id|gbkey|transcript_name|tag) "([^"]+)";/g;
 	var re_gff3 = /\b(transcript_id|transcript_type|transcript_biotype|gene_name|gene_id|gbkey|transcript_name)=([^;]+)/g;
+	var re_gtf_gene  = /\b(gene_id|gene_type|gene_name) "([^;]+)";/g;
+	var re_gff3_gene = /\b(gene_id|gene_type|source_gene|gene_biotype|gene_name)=([^;]+);/g;
 	var buf = new Bytes();
 	var file = args[getopt.ind] == '-'? new File() : new File(args[getopt.ind]);
 
@@ -1620,16 +1625,37 @@ function paf_gff2bed(args)
 			continue;
 		}
 		if (t[0].charAt(0) == '#') continue;
+		if (output_gene) {
+			var id = null, src = null, biotype = null, type = "", name = "N/A";
+			if (t[2] != "gene") continue;
+			while ((m = re_gtf_gene.exec(t[8])) != null) {
+				if (m[1] == "gene_id") id = m[2];
+				else if (m[1] == "gene_type") type = m[2];
+				else if (m[1] == "gene_name") name = m[2];
+			}
+			while ((m = re_gff3_gene.exec(t[8])) != null) {
+				if (m[1] == "gene_id") id = m[2];
+				else if (m[1] == "source_gene") src = m[2];
+				else if (m[1] == "gene_type") type = m[2];
+				else if (m[1] == "gene_biotype") biotype = m[2];
+				else if (m[1] == "gene_name") name = m[2];
+			}
+			if (src != null) id = src;
+			if (type == "" && biotype != null) type = biotype;
+			print(t[0], parseInt(t[3]) - 1, t[4], [id, type, name].join("|"), 1000, t[6]);
+			continue;
+		}
 		if (t[2] != "CDS" && t[2] != "exon") continue;
 		t[3] = parseInt(t[3]) - 1;
 		t[4] = parseInt(t[4]);
-		var id = null, type = "", name = "N/A", biotype = "", m, tname = "N/A";
+		var id = null, type = "", name = "N/A", biotype = "", m, tname = "N/A", ens_canonical = false;
 		while ((m = re_gtf.exec(t[8])) != null) {
 			if (m[1] == "transcript_id") id = m[2];
 			else if (m[1] == "transcript_type") type = m[2];
 			else if (m[1] == "transcript_biotype" || m[1] == "gbkey") biotype = m[2];
 			else if (m[1] == "gene_name" || m[1] == "gene_id") name = m[2];
 			else if (m[1] == "transcript_name") tname = m[2];
+			else if (m[1] == "tag" && m[2] == "Ensembl_canonical") ens_canonical = true;
 		}
 		while ((m = re_gff3.exec(t[8])) != null) {
 			if (m[1] == "transcript_id") id = m[2];
@@ -1638,6 +1664,7 @@ function paf_gff2bed(args)
 			else if (m[1] == "gene_name" || m[1] == "gene_id") name = m[2];
 			else if (m[1] == "transcript_name") tname = m[2];
 		}
+		if (ens_canon_only && !ens_canonical) continue;
 		if (type == "" && biotype != "") type = biotype;
 		if (id == null) throw Error("No transcript_id");
 		if (id != last_id) {
@@ -2681,6 +2708,24 @@ function paf_misjoin(args)
 		return len < (en - st) * cen_ratio? false : true;
 	}
 
+	function test_cen_point(cen, chr, x) {
+		var b = cen[chr];
+		if (b == null) return false;
+		print(x, b[0][0], b[0][1]);
+		for (var j = 0; j < b.length; ++j)
+			if (x >= b[j][0] && x < b[j][1])
+				return true;
+		return false;
+	}
+
+	if (show_err || show_long) {
+		print("C\tJ  inter-chromosomal misjoin");
+		print("C\tj  inter-chromosomal misjoin with both breakpoints ending in centromeres");
+		print("C\tG  long gap on the reference genome");
+		print("C\tg  long gap on the reference genome with both breakpoints ending in centromeres");
+		print("C\tM  closed inversion");
+		print("C");
+	}
 	function process(a) {
 		var k = 0;
 		for (var i = 0; i < a.length; ++i) {
@@ -2693,14 +2738,17 @@ function paf_misjoin(args)
 		a = a.sort(function(x,y){return x[2]-y[2]});
 		if (show_long) for (var i = 0; i < a.length; ++i) print(a[i].join("\t"));
 		for (var i = 1; i < a.length; ++i) {
-			var ov = [false, false];
+			var ov = [false, false], end_cen = [false, false];
 			ov[0] = test_cen(cen, a[i-1][5], a[i-1][7], a[i-1][8]);
 			ov[1] = test_cen(cen, a[i][5], a[i][7], a[i][8]);
+			end_cen[0] = test_cen_point(cen, a[i-1][5], a[i-1][4] == '+'? a[i-1][8] : a[i-1][7]);
+			end_cen[1] = test_cen_point(cen, a[i][5],   a[i][4] == '+'?   a[i][7]   : a[i][8]);
 			if (a[i-1][5] != a[i][5]) { // different chr
 				if (ov[0] || ov[1]) ++n_diff[1];
 				else if (show_err) {
-					print("J", a[i-1].slice(0, 12).join("\t"));
-					print("J", a[i].slice(0, 12).join("\t"));
+					var label = end_cen[0] && end_cen[1]? 'j' : 'J';
+					print(label, a[i-1].slice(0, 12).join("\t"));
+					print(label, a[i].slice(0, 12).join("\t"));
 				}
 				++n_diff[0];
 			} else if (a[i-1][4] == a[i][4]) { // a gap
@@ -2710,8 +2758,9 @@ function paf_misjoin(args)
 				if (gap > max_gap) {
 					if (ov[0] || ov[1]) ++n_gap[1];
 					else if (show_err) {
-						print("G", a[i-1].slice(0, 12).join("\t"));
-						print("G", a[i].slice(0, 12).join("\t"));
+						var label = end_cen[0] && end_cen[1]? 'g' : 'G';
+						print(label, a[i-1].slice(0, 12).join("\t"));
+						print(label, a[i].slice(0, 12).join("\t"));
 					}
 					++n_gap[0];
 				}

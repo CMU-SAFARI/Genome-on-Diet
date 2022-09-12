@@ -1,0 +1,57 @@
+sbatch -c 40 --wrap="/home/alserm/minimap2-alser/minimap2-20Jan2022/minimap2 -x sr -t 1 -n 1 -Z 10 -W 2 -i 2 -k 12 -w 8 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/SRR826471_1_12Reads.fastq > genome_SRR826471_1_12Reads.txt"
+
+
+sbatch -c 40 --wrap="time /home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -x sr -t 1 -n 1 -k 12 -w 8 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/SRR826471_1_40Klines.fastq > minimap2.txt"
+
+
+
+
+
+/usr/bin/time -v /home/alserm/minimap2-alser/minimap2-20Jan2022/minimap2 -x sr -t 1 -n 4 -Z 10 -W 2 -i 2 -k 12 -w 8 --print-seeds -a --secondary=yes test/dummy.fasta test/dummy.fastq |& tee tst.txt
+
+
+/usr/bin/time -v /home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -x sr -t 1 -n 1 -k 12 -w 8 -a --secondary=yes test/dummy.fasta test/dummy.fastq |& tee tst.txt
+
+
+
+
+
+
+
+cd /home/alserm/minimap2-alser/src/
+/home/alserm/minimap2-alser/src/minimap2 -t 1 -Z 10 -W 2 -i 3 -k 12 -w 8 -N 1 --AF_dis 1.2 --AF_max_loc 5 -n 0.5 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/SRR826471_1_3Reads.fastq
+
+/home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -x sr -t 1 -n 1 -k 12 -w 8 -N 1 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/SRR826471_1_3Reads.fastq 
+
+
+
+
+/home/alserm/minimap2-alser/src/minimap2 -t 1 -Z 10 -W 2 -i 3 -k 18 -w 10 -N 1 -A 2 -B 8 -O 12,32 -E 2,1 -r 100 -p 0.5 -f1000,5000 -m20 -s40 -g100 -2K50m --AF_dis 1.2 --AF_max_loc 50 -n 0.5 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/SRR826471_1_3Reads.fastq |& tee tst.txt
+
+/home/alserm/minimap2-alser/src/minimap2 -t 1 -Z 10 -W 2 -i 2 -k 19 -w 19 -N 1 --AF_dis 1.2 -n 0.7 --AF_max_loc 5 -a --secondary=yes /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/minimap2-alser/src/HiFi_singleread_withNoSeedMatch.fastq
+
+
+/home/alserm/Molecules2Variations/ERR240727_1.fastq
+
+
+/home/alserm/Molecules2Variations/PBmixSequel729_1_A01_PBTH_30hours_19kbV2PD_70pM_HumanHG003.fastq
+
+
+/home/alserm/Molecules2Variations/GM24149_1.fastq
+
+
+cd /home/alserm/minimap2-alser/
+sbatch -c 48 --output=minimap2-HiFi.out --exclusive --wrap "/usr/bin/time -v -p --output /home/alserm/minimap2-alser/minimap2-HiFi-time.txt /home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -t 40 -ax map-hifi -N 1 -a -o /home/alserm/minimap2-alser/minimap2-HiFi.sam /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/Molecules2Variations/PBmixSequel729_1_A01_PBTH_30hours_19kbV2PD_70pM_HumanHG003.fastq"
+
+sbatch -c 48 --output=minimap2-ONT.out --exclusive --wrap "/usr/bin/time -v -p --output /home/alserm/minimap2-alser/minimap2-ONT-time.txt /home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -t 40 -ax map-ont -N 1 -a -o /home/alserm/minimap2-alser/minimap2-ONT.sam /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/Molecules2Variations/GM24149_1.fastq"
+
+sbatch -c 48 --output=minimap2-Illumina.out --exclusive --wrap "/usr/bin/time -v -p --output /home/alserm/minimap2-alser/minimap2-Illumina-time.txt /home/alserm/minimap2-alser/minimap2-original-17Feb2022/minimap2 -t 40 -ax sr -N 1 -a -o /home/alserm/minimap2-alser/minimap2-Illumina.sam /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/Molecules2Variations/ERR240727_1.fastq"
+
+
+
+sbatch -c 48 --output=GenomeOnDiet-HiFi.out --exclusive --wrap "/usr/bin/time -v -p --output /home/alserm/minimap2-alser/GenomeOnDiet-HiFi-time.txt /home/alserm/minimap2-alser/src/minimap2 -t 40 -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 --AF_dis 1.2 -n 0.7 --AF_max_loc 2 --secondary=yes -a -o /home/alserm/minimap2-alser/GenomeOnDiet-HiFi.sam /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/Molecules2Variations/PBmixSequel729_1_A01_PBTH_30hours_19kbV2PD_70pM_HumanHG003.fastq"
+
+sbatch -c 48 --output=GenomeOnDiet-ONT.out --exclusive --wrap "/usr/bin/time -v -p --output /home/alserm/minimap2-alser/GenomeOnDiet-ONT-time.txt /home/alserm/minimap2-alser/src/minimap2 -t 40 -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 --AF_dis 1.2 -n 0.6 --AF_max_loc 2 --secondary=yes -a -o /home/alserm/minimap2-alser/GenomeOnDiet-ONT.sam /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/Molecules2Variations/GM24149_1.fastq"
+
+sbatch -c 48 --output=GenomeOnDiet-Illumina.out --exclusive --wrap "/usr/bin/time -v -p --output /home/alserm/minimap2-alser/GenomeOnDiet-Illumina-time.txt /home/alserm/minimap2-alser/src/minimap2 -t 40 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 --AF_dis 1.2 -n 0.7 --AF_max_loc 5 --frag=yes --secondary=yes -a -o /home/alserm/minimap2-alser/GenomeOnDiet-Illumina.sam /home/alserm/minimap2-alser/NC_000001_11_Chromosome1.fasta /home/alserm/Molecules2Variations/ERR240727_1.fastq"
+

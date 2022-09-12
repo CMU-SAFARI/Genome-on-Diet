@@ -43,13 +43,22 @@ endif
 		$(CC) -c $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $< -o $@
 
 
-all:$(PROG)
+all:$(PROG) minimap2_avx minimap2_sketch_avx minimap2_ksw2_avx
 
 extra:all $(PROG_EXTRA)
 
 
 minimap2:main.o libminimap2.a
 		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2 $(LIBS)
+
+minimap2_avx:main.o libminimap2_avx.a
+		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2_avx $(LIBS)
+
+minimap2_sketch_avx:main.o libminimap2_sketch_avx.a
+		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2_sketch_avx $(LIBS)
+
+minimap2_ksw2_avx:main.o libminimap2_ksw2_avx.a
+		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2_ksw2_avx $(LIBS)
 
 minimap2-lite:example.o libminimap2.a
 		$(CC) $(CFLAGS) $< -o $@ -L. -lminimap2 $(LIBS)
