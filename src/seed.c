@@ -1,9 +1,8 @@
-#include "mmpriv.h"
 #include "kalloc.h"
 #include "ksort.h"
+#include "mmpriv.h"
 
-void mm_seed_mz_flt(void *km, mm128_v *mv, int32_t q_occ_max, float q_occ_frac)
-{
+void mm_seed_mz_flt(void *km, mm128_v *mv, int32_t q_occ_max, float q_occ_frac) {
 	mm128_t *a;
 	size_t i, j, st;
 	if (mv->n <= q_occ_max || q_occ_frac <= 0.0f || q_occ_max <= 0) return;
@@ -14,9 +13,9 @@ void mm_seed_mz_flt(void *km, mm128_v *mv, int32_t q_occ_max, float q_occ_frac)
 	for (st = 0, i = 1; i <= mv->n; ++i) {
 		if (i == mv->n || a[i].x != a[st].x) {
 			int32_t cnt = i - st;
-			//printf("mm_seed_mz_flt\t%d ", cnt);
-			//printbits(a[st].x,64);
-			//printf("\n");
+			// printf("mm_seed_mz_flt\t%d ", cnt);
+			// printbits(a[st].x,64);
+			// printf("\n");
 			if (cnt > q_occ_max && cnt > mv->n * q_occ_frac)
 				for (j = st; j < i; ++j)
 					mv->a[a[j].y].x = 0;
@@ -25,71 +24,49 @@ void mm_seed_mz_flt(void *km, mm128_v *mv, int32_t q_occ_max, float q_occ_frac)
 	}
 	kfree(km, a);
 	for (i = j = 0; i < mv->n; ++i)
-		if (mv->a[i].x != 0)
-			mv->a[j++] = mv->a[i];
+		if (mv->a[i].x != 0) mv->a[j++] = mv->a[i];
 	mv->n = j;
 }
 
-mm_seed_t *mm_seed_collect_all(void *km, const mm_idx_t *mi, const mm128_v *mv, int32_t *n_m_)
-{
+// mm_seed_t:
+// .n: number of match on the ref
+// .q_pos: query_pos
+// .q_span: query_span
+// .flt: filtering
+mm_seed_t *mm_seed_collect_all(void *km, const mm_idx_t *mi, const mm128_v *mv, int32_t *n_m_) {
 	mm_seed_t *m;
 	size_t i;
 	int32_t k;
-	m = (mm_seed_t*)kmalloc(km, mv->n * sizeof(mm_seed_t));
+	m = (mm_seed_t *)kmalloc(km, mv->n * sizeof(mm_seed_t));
 	for (i = k = 0; i < mv->n; ++i) {
 
 		const uint64_t *cr;
 		mm_seed_t *q;
-		mm128_t *p = &mv->a[i];
+		mm128_t *p     = &mv->a[i];
 		uint32_t q_pos = (uint32_t)p->y, q_span = p->x & 0xff;
 		int t;
-		cr = mm_idx_get(mi, p->x>>8, &t);
+		cr = mm_idx_get(mi, p->x >> 8, &t);
 		if (t == 0) continue;
-		q = &m[k++];
+		q        = &m[k++];
 		q->q_pos = q_pos, q->q_span = q_span, q->cr = cr, q->n = t, q->seg_id = p->y >> 32;
 		q->is_tandem = q->flt = 0;
-		if (i > 0 && p->x>>8 == mv->a[i - 1].x>>8) q->is_tandem = 1;
-		if (i < mv->n - 1 && p->x>>8 == mv->a[i + 1].x>>8) q->is_tandem = 1;
+		if (i > 0 && p->x >> 8 == mv->a[i - 1].x >> 8) q->is_tandem = 1;
+		if (i < mv->n - 1 && p->x >> 8 == mv->a[i + 1].x >> 8) q->is_tandem = 1;
 	}
 	*n_m_ = k;
 	/*for(i = 0; i < mv->n; ++i){
-		printf("k: %d\n", k);
-		printf("mm_seed_select2: %d\n", m[i].n);
+	        printf("k: %d\n", k);
+	        printf("mm_seed_select2: %d\n", m[i].n);
 	}*/
-	return m;
-}
-
-mm_seed_t *mm_seed_collect_all_2(void *km, const mm_idx_t *mi, const mm128_v *mv, int32_t *n_m_)
-{
-	mm_seed_t *m;
-	size_t i;
-	int32_t k;
-	m = (mm_seed_t*)kmalloc(km, mv->n * sizeof(mm_seed_t));
-	for (i = k = 0; i < mv->n; ++i) {
-		//printf("mm_seed_collect_all_2: %d\n",mv->n);
-		const uint64_t *cr;
-		mm_seed_t *q;
-		mm128_t *p = &mv->a[i];
-		uint32_t q_pos = (uint32_t)p->y, q_span = p->x & 0xff;
-		int t;
-		cr = mm_idx_get(mi, p->x>>8, &t);
-		//if (t == 0) continue;
-		q = &m[k++];
-		q->q_pos = q_pos, q->q_span = q_span, q->cr = cr, q->n = t, q->seg_id = p->y >> 32;
-		q->is_tandem = q->flt = 0;
-		if (i > 0 && p->x>>8 == mv->a[i - 1].x>>8) q->is_tandem = 1;
-		if (i < mv->n - 1 && p->x>>8 == mv->a[i + 1].x>>8) q->is_tandem = 1;
-	}
-	*n_m_ = k;
 	return m;
 }
 
 #define MAX_MAX_HIGH_OCC 128
 
-void mm_seed_select(int32_t n, mm_seed_t *a, int len, int max_occ, int max_max_occ, int dist)
-{ // for high-occ minimizers, choose up to max_high_occ in each high-occ streak
-	extern void ks_heapdown_uint64_t(size_t i, size_t n, uint64_t*);
-	extern void ks_heapmake_uint64_t(size_t n, uint64_t*);
+void mm_seed_select(int32_t n, mm_seed_t *a, int len, int max_occ, int max_max_occ,
+                    int dist) { // for high-occ minimizers, choose up to max_high_occ in each high-occ streak
+	extern void ks_heapdown_uint64_t(size_t i, size_t n, uint64_t *);
+	extern void ks_heapmake_uint64_t(size_t n, uint64_t *);
 	int32_t i, last0, m;
 	uint64_t b[MAX_MAX_HIGH_OCC]; // this is to avoid a heap allocation
 
@@ -100,98 +77,62 @@ void mm_seed_select(int32_t n, mm_seed_t *a, int len, int max_occ, int max_max_o
 	for (i = 0, last0 = -1; i <= n; ++i) {
 		if (i == n || a[i].n <= max_occ) {
 			if (i - last0 > 1) {
-				int32_t ps = last0 < 0? 0 : (uint32_t)a[last0].q_pos>>1;
-				int32_t pe = i == n? len : (uint32_t)a[i].q_pos>>1;
+				int32_t ps = last0 < 0 ? 0 : (uint32_t)a[last0].q_pos >> 1;
+				int32_t pe = i == n ? len : (uint32_t)a[i].q_pos >> 1;
 				int32_t j, k, st = last0 + 1, en = i;
 				int32_t max_high_occ = (int32_t)((double)(pe - ps) / dist + .499);
 				if (max_high_occ > 0) {
-					if (max_high_occ > MAX_MAX_HIGH_OCC)
-						max_high_occ = MAX_MAX_HIGH_OCC;
+					if (max_high_occ > MAX_MAX_HIGH_OCC) max_high_occ = MAX_MAX_HIGH_OCC;
 					for (j = st, k = 0; j < en && k < max_high_occ; ++j, ++k)
-						b[k] = (uint64_t)a[j].n<<32 | j;
+						b[k] = (uint64_t)a[j].n << 32 | j;
 					ks_heapmake_uint64_t(k, b); // initialize the binomial heap
-					for (; j < en; ++j) { // if there are more, choose top max_high_occ
-						if (a[j].n < (int32_t)(b[0]>>32)) { // then update the heap
-							b[0] = (uint64_t)a[j].n<<32 | j;
+					for (; j < en; ++j) {       // if there are more, choose top max_high_occ
+						if (a[j].n < (int32_t)(b[0] >> 32)) { // then update the heap
+							b[0] = (uint64_t)a[j].n << 32 | j;
 							ks_heapdown_uint64_t(0, k, b);
 						}
 					}
-					for (j = 0; j < k; ++j) a[(uint32_t)b[j]].flt = 1;
+					for (j = 0; j < k; ++j)
+						a[(uint32_t)b[j]].flt = 1;
 				}
-				for (j = st; j < en; ++j) a[j].flt ^= 1;
 				for (j = st; j < en; ++j)
-					if (a[j].n > max_max_occ)
-						a[j].flt = 1;
+					a[j].flt ^= 1;
+				for (j = st; j < en; ++j)
+					if (a[j].n > max_max_occ) a[j].flt = 1;
 			}
 			last0 = i;
 		}
 	}
 }
 
-int mm_seed_select2(int32_t n, mm_seed_t *a,mm_pattern_versions *mm_pattern_versions1)
-{ // for high-occ minimizers, choose up to max_high_occ in each high-occ streak
-	extern void ks_heapdown_uint64_t(size_t i, size_t n, uint64_t*);
-	extern void ks_heapmake_uint64_t(size_t n, uint64_t*);
-	int i,jj,kk=0;
-	uint64_t b[MAX_MAX_HIGH_OCC]; // this is to avoid a heap allocation
-	int shift = 0;
-	int freq_add = 0, freq_max = 0;
-
-	if (n == 0 || n == 1) return shift;
-	int numberofVersions = mm_pattern_versions1->n_shift_seeds_number;
-	//printf("=============seed_select2: %d\n",mm_pattern_versions1->n_shift_seeds_number);
-	// Loop to add frequencies
-
-	for (jj=0; jj< numberofVersions; ++jj){
-		for(i = 0; i < mm_pattern_versions1->shift_seeds_number[jj]; ++i){
-			freq_add += a[kk].n;
-			if (mm_dbg_flag & MM_DBG_PRINT_SEED) printf("mm_seed_select2: sketch2's %d seed exists %d times\tfreq_add: %d\tfreq_max: %d\t shift: %d\n", (i+1), a[kk].n, freq_add, freq_max, shift);
-			kk++;
-		}
-		if(freq_add > freq_max){
-			//printf("freq_add: %d\n", freq_add);
-			shift = jj;
-			freq_max = freq_add;
-		}
-		freq_add = 0;
-
-		if (mm_dbg_flag & MM_DBG_PRINT_SEED) printf("mm_seed_select2: freq_max: %d\t shift: %d\n", freq_max, shift);
-
-	}
-	if (mm_dbg_flag & MM_DBG_PRINT_SEED) printf("Final shift: %d\n", shift);
-	return shift;
-}
-
-
-
-mm_seed_t *mm_collect_matches(void *km, int *_n_m, int qlen, int max_occ, int max_max_occ, int dist, const mm_idx_t *mi, const mm128_v *mv, int64_t *n_a, int *rep_len, int *n_mini_pos, uint64_t **mini_pos)
-{
+mm_seed_t *mm_collect_matches(void *km, int *_n_m, int qlen, int max_occ, int max_max_occ, int dist, const mm_idx_t *mi,
+                              const mm128_v *mv, int64_t *n_a, int *rep_len, int *n_mini_pos, uint64_t **mini_pos) {
 	int rep_st = 0, rep_en = 0, n_m, n_m0;
 	size_t i;
 	mm_seed_t *m;
 	*n_mini_pos = 0;
-	*mini_pos = (uint64_t*)kmalloc(km, mv->n * sizeof(uint64_t));
-	m = mm_seed_collect_all(km, mi, mv, &n_m0);
+	*mini_pos   = (uint64_t *)kmalloc(km, mv->n * sizeof(uint64_t));
+	m           = mm_seed_collect_all(km, mi, mv, &n_m0);
 	if (dist > 0 && max_max_occ > max_occ) {
 		mm_seed_select(n_m0, m, qlen, max_occ, max_max_occ, dist);
 	} else {
 		for (i = 0; i < n_m0; ++i)
-			if (m[i].n > max_occ)
-				m[i].flt = 1;
+			if (m[i].n > max_occ) m[i].flt = 1;
 	}
 	for (i = 0, n_m = 0, *rep_len = 0, *n_a = 0; i < n_m0; ++i) {
 		mm_seed_t *q = &m[i];
-		//fprintf(stderr, "X\t%d\t%d\t%d\n", q->q_pos>>1, q->n, q->flt);
+		// fprintf(stderr, "X\t%d\t%d\t%d\n", q->q_pos>>1, q->n, q->flt);
 		if (q->flt) {
 			int en = (q->q_pos >> 1) + 1, st = en - q->q_span;
 			if (st > rep_en) {
 				*rep_len += rep_en - rep_st;
 				rep_st = st, rep_en = en;
-			} else rep_en = en;
+			} else
+				rep_en = en;
 		} else {
 			*n_a += q->n;
-			(*mini_pos)[(*n_mini_pos)++] = (uint64_t)q->q_span<<32 | q->q_pos>>1;
-			m[n_m++] = *q;
+			(*mini_pos)[(*n_mini_pos)++] = (uint64_t)q->q_span << 32 | q->q_pos >> 1;
+			m[n_m++]                     = *q;
 		}
 	}
 	*rep_len += rep_en - rep_st;
@@ -199,21 +140,55 @@ mm_seed_t *mm_collect_matches(void *km, int *_n_m, int qlen, int max_occ, int ma
 	return m;
 }
 
-int mm_collect_matches2(void *km, int *_n_m, int qlen, int max_occ, int max_max_occ, int dist, const mm_idx_t *mi, const mm128_v *mv, int64_t *n_a, int *rep_len, int *n_mini_pos, uint64_t **mini_pos, mm_pattern_versions *mm_pattern_versions1)
-{
-	int rep_st = 0, rep_en = 0, n_m, n_m0;
+mm_seed_t *mm_collect_matches2(void *km, int *_n_m, int qlen, int max_occ, int max_max_occ, int dist,
+                               const mm_idx_t *mi, const mm128_v *mv, int64_t *n_a) {
+	int n_m, n_m0;
 	size_t i;
-	int shift;
 	mm_seed_t *m;
-	*n_mini_pos = 0;
-	*mini_pos = (uint64_t*)kmalloc(km, mv->n * sizeof(uint64_t));
-	m = mm_seed_collect_all_2(km, mi, mv, &n_m0);
+	m = mm_seed_collect_all(km, mi, mv, &n_m0);
 	if (dist > 0 && max_max_occ > max_occ) {
-		shift = mm_seed_select2(n_m0, m, mm_pattern_versions1);
+		mm_seed_select(n_m0, m, qlen, max_occ, max_max_occ, dist);
 	} else {
 		for (i = 0; i < n_m0; ++i)
-			if (m[i].n > max_occ)
-				m[i].flt = 1;
+			if (m[i].n > max_occ) m[i].flt = 1;
+	}
+	for (i = 0, n_m = 0, *n_a = 0; i < n_m0; ++i) {
+		mm_seed_t *q = &m[i];
+		if (!q->flt) {
+			*n_a += q->n;
+			m[n_m++] = *q;
+		}
+	}
+	*_n_m = n_m;
+	return m;
+}
+
+unsigned mm_get_shift(void *km, const mm_idx_t *mi, const mm128_v mv, const mm_pattern_t mm_pattern) {
+	unsigned shift       = 0;
+	unsigned max_nb_hits = 0;
+	mm128_t *p           = mv.a;
+	for (unsigned i = 0; i < mm_pattern.n; ++i) {
+		unsigned cur_nb_hits = 0;
+		for (unsigned k = 0; k < mm_pattern.shift_seeds_number[i]; k++) {
+			int t;
+			mm_idx_get(mi, p[k].x >> 8, &t);
+			cur_nb_hits += t;
+			if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
+				fprintf(stderr, "mm_get_shift: sketch2's %d seed exists %d time(s), shift %u\n", k, t,
+				        i);
+			}
+		}
+		if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
+			fprintf(stderr, "mm_get_shift: Shift %d, nb_locs %d\n", i, cur_nb_hits);
+		}
+		if (cur_nb_hits > max_nb_hits) {
+			shift       = i;
+			max_nb_hits = cur_nb_hits;
+		}
+		p += mm_pattern.shift_seeds_number[i];
+	}
+	if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
+		fprintf(stderr, "Final shift: %d\n", shift);
 	}
 	return shift;
 }

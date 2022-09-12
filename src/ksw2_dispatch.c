@@ -52,6 +52,18 @@ static int x86_simd(void)
 	return flag;
 }
 
+void exact_match_sse(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t m, const int8_t *mat, int8_t q, int8_t e, int w, int zdrop, int end_bonus, int flag, ksw_extz_t *ez, bool *exact_match, int *mismatch_cnt)
+{
+	extern void exact_match_sse2(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t m, const int8_t *mat, int8_t q, int8_t e, int w, int zdrop, int end_bonus, int flag, ksw_extz_t *ez, bool *exact_match, int *mismatch_cnt);
+	extern void exact_match_sse41(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t m, const int8_t *mat, int8_t q, int8_t e, int w, int zdrop, int end_bonus, int flag, ksw_extz_t *ez, bool *exact_match, int *mismatch_cnt);
+	if (ksw_simd < 0) ksw_simd = x86_simd();
+	if (ksw_simd & SIMD_SSE4_1)
+		exact_match_sse41(km, qlen, query, tlen, target, m, mat, q, e, w, zdrop, end_bonus, flag, ez, exact_match, mismatch_cnt);
+	else if (ksw_simd & SIMD_SSE2)
+		exact_match_sse2(km, qlen, query, tlen, target, m, mat, q, e, w, zdrop, end_bonus, flag, ez, exact_match, mismatch_cnt);
+	else abort();
+}
+
 void ksw_extz2_sse(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t m, const int8_t *mat, int8_t q, int8_t e, int w, int zdrop, int end_bonus, int flag, ksw_extz_t *ez)
 {
 	extern void ksw_extz2_sse2(void *km, int qlen, const uint8_t *query, int tlen, const uint8_t *target, int8_t m, const int8_t *mat, int8_t q, int8_t e, int w, int zdrop, int end_bonus, int flag, ksw_extz_t *ez);

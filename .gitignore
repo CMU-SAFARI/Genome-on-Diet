@@ -1,0 +1,4 @@
+tags
+*.o
+minimap2
+*.a
