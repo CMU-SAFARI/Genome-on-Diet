@@ -52,7 +52,7 @@ https://www.ncbi.nlm.nih.gov/assembly/GCA_000404065.3/
 ```
 
 ---
-
+ 
 # Metagenomes:
 We obtain our metagenomes for building the reference database from RefSeq (https://www.ncbi.nlm.nih.gov/refseq) database.
 The list of TAXIDs for the metagenomes we choose is listed as follows:
