@@ -4,7 +4,7 @@ INCLUDES=
 OBJS=		kthread.o kalloc.o misc.o bseq.o sdust.o options.o index.o \
 			lchain.o align.o hit.o seed.o format.o pe.o esterr.o splitidx.o \
 			ksw2_ll_sse.o profile.o
-PROG=		minimap2
+PROG=		GoD
 PROG_EXTRA=	sdust minimap2-lite
 LIBS=		-lm -lz -lpthread
 
@@ -43,25 +43,22 @@ endif
 		$(CC) -c $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $< -o $@
 
 
-all:$(PROG) minimap2_avx minimap2_sketch_avx minimap2_ksw2_avx
+all: $(PROG) $(PROG)_avx $(PROG)_sketch_avx $(PROG)_ksw2_avx
 
 extra:all $(PROG_EXTRA)
 
 
-minimap2:main.o libminimap2.a
+$(PROG):main.o libminimap2.a
 		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2 $(LIBS)
 
-minimap2_avx:main.o libminimap2_avx.a
+$(PROG)_avx:main.o libminimap2_avx.a
 		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2_avx $(LIBS)
 
-minimap2_sketch_avx:main.o libminimap2_sketch_avx.a
+$(PROG)_sketch_avx:main.o libminimap2_sketch_avx.a
 		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2_sketch_avx $(LIBS)
 
-minimap2_ksw2_avx:main.o libminimap2_ksw2_avx.a
+$(PROG)_ksw2_avx:main.o libminimap2_ksw2_avx.a
 		$(CC) $(CFLAGS) main.o -o $@ -L. -lminimap2_ksw2_avx $(LIBS)
-
-minimap2-lite:example.o libminimap2.a
-		$(CC) $(CFLAGS) $< -o $@ -L. -lminimap2 $(LIBS)
 
 libminimap2_ksw2_avx.a:$(OBJS) map_avx.o ksw2_extd2_avx.o sketch.o
 	$(AR) -csru $@ $^
@@ -138,7 +135,7 @@ exact_match_neon.o:exact_match_sse.c ksw2.h kalloc.h
 # other non-file targets
 
 clean:
-		rm -fr gmon.out *.o a.out $(PROG) minimap2_avx minimap2_sketch_avx minimap2_ksw2_avx $(PROG_EXTRA) *~ *.a *.dSYM build dist mappy*.so mappy.c python/mappy.c mappy.egg*
+		rm -fr gmon.out *.o  $(PROG) $(PROG)_avx $(PROG)_sketch_avx $(PROG)_ksw2_avx $(PROG_EXTRA) *~ *.a *.dSYM build dist mappy*.so mappy.c python/mappy.c mappy.egg*
 
 depend:
 		(LC_ALL=C; export LC_ALL; makedepend -Y -- $(CFLAGS) $(CPPFLAGS) -- *.c)
