@@ -75,22 +75,19 @@ We introduce one way to implement sparsified genomics using highly-efficient and
 ```
 Genome-on-Diet-master
 ├───1. Data
-└───2. src
-├───3. ReproducibleEvaluation
-    └───4. ReadMapping
-    └───5. ContainmentSearch
-    └───6. TaxonomicProfiling        
-├───7. RawResults
-    └───8. ReadMapping
-    └───9. ContainmentSearch
-    └───10. TaxonomicProfiling 
-├───11. Figures
+└───2. Genome-on-Diet-SNPs-Indels-SVs
+└───3. Genome-on-Diet-SNPs-Indels
+├───4. ReproducibleEvaluation
+    └───5. ReadMapping      
+├───6. RawResults
+├───7. Figures
 ```            
 1. In the "Data" directory, you will find a description of the sequencing reads and metagenomic reads that we used in our evaluation. You will also find details on how to obtain the reference genomes and RefSeq database that we used in our evaluation. This enables you to use the scripts we have in the "ReproducibleEvaluation" directory to reproduce the exact same experimental evaluations.
-2. In the "src" directory, you will find the source code of the Genome-on-Diet implementation. We use the source code of minimap2 as a baseline, where we applied our changes directly to minimap2. This enables researchers that are familiar with the source code of minimap2 to be also familiar with the source code of Genome-on-Diet with minimal efforts.
-3. In the "ReproducibleEvaluation" directory, you will find all shell scripts and commands we used to run the experimental evaluations we presented in the paper. You will find three subdirectories, (4), (5), and (6), covering the three applications that we evaluated.
-7. In the "RawResults" directory, you will find all raw results and exact values that we presented in the paper for the scripts we provided in (3). You will find three subdirectories, (8), (9), and (10), covering the three applications that we evaluated.
-11. In the "Figures" directory, you will find the highh-quality figures that we included in the paper.
+2. In the "Genome-on-Diet-SNPs-Indels-SVs" directory, you will find the source code of the Genome-on-Diet-SVs implementation. We use the source code of minimap2 as a baseline, where we applied our changes directly to minimap2. This enables researchers that are familiar with the source code of minimap2 to be also familiar with the source code of Genome-on-Diet with minimal efforts.
+3. In the "Genome-on-Diet-SNPs-Indels" directory, you will find the source code of the Genome-on-Diet implementation. We use the source code of minimap2 as a baseline, where we applied our changes directly to minimap2. This enables researchers that are familiar with the source code of minimap2 to be also familiar with the source code of Genome-on-Diet with minimal efforts.
+4. In the "ReproducibleEvaluation" directory, you will find all shell scripts and commands we used to run the experimental evaluations we presented in the paper.
+6. In the "RawResults" directory, you will find all raw results and exact values that we presented in the paper.
+7. In the "Figures" directory, you will find the highh-quality figures that we included in the paper.
 
 
 ##  <a name="contact"></a>Getting Help
