@@ -43,7 +43,7 @@ Genome-on-Diet is based on four key ideas.
 4. Introducing four key optimization strategies for making Genome-on-Diet highly parallel, efficient, and accurate. All parameters and optimizations can be conveniently configured, enabled, and disabled using input parameter values entered in the command line of Genome-on-Diet.
 
 
-![alt text](https://github.com/CMU-SAFARI/Genome-on-Diet/blob/main/Figures/Genome-on-Diet-Figure1.png?raw=true)
+![alt text](https://github.com/CMU-SAFARI/Genome-on-Diet/blob/main/Figures/Genome-on-Diet-main.png?raw=true)
 
 
 ##  <a name="results"></a>Benefits of Genome-on-Diet 
