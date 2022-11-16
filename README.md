@@ -65,7 +65,7 @@ Genome-on-Diet is based on four key ideas.
 ##  <a name="results"></a>Benefits of Genome-on-Diet 
 Sparsifying genomic sequences makes large-scale analyses feasible and efficient. The use of ‘1110’, ‘110’, ‘10’, and ‘100’ patterns accelerates the analyses we evaluated by 1.3x, 1.4x, 1.9x, and 2.7x, respectively, showing a reduction in the execution time by almost 1/4, 1/3, 1/2, and 2/3, respectively. This demonstrates that the execution time scales linearly with the number of zeros determined in the pattern sequence. The use of ‘1110’, ‘110’, ‘10’, and ‘100’ patterns also directly reduces the size of the index by 1/4, 1/3, 1/2, and 2/3, respectively.
 
-Sparsifying genomic sequences greatly accelerates state-of-the-art read mappers by 2.98-12.11x using real Illumina, HiFi, and ONT reads, while providing a higher number of mapped reads with the highest mapping quality and more detected indels and complex structural variations. Sparsifying genomic sequences makes containment search through very large genomes and very large databases 72.7-75.88x faster and 723.3x more space-efficient than searching through non-sparsified genomic sequences. Sparsifying genomic sequences enables robust microbiome discovery by providing 54.15-61.88x faster and 720x more space-efficient taxonomic profiling of metagenomic samples.
+Sparsifying genomic sequences greatly accelerates state-of-the-art read mappers by 1.54-8.8x using real Illumina, HiFi, and ONT reads, while providing a higher number of mapped reads with the highest mapping quality and more detected indels and complex structural variations. Sparsifying genomic sequences makes containment search through very large genomes and very large databases 72.7-75.88x faster and 723.3x more space-efficient than searching through non-sparsified genomic sequences. Sparsifying genomic sequences enables robust microbiome discovery by providing 54.15-61.88x faster and 720x more space-efficient taxonomic profiling of metagenomic samples.
 
 ##  <a name="usage"></a>Using Genome-on-Diet:
 The concept of sparsified genomics can be implemented and leveraged using different implementations and algorithms.
@@ -103,7 +103,7 @@ If you use Genome-on-Diet in your work, please cite:
 
 > Mohammed Alser,  Julien Eudine, and Onur Mutlu. 
 > "Taming Large-Scale Genomic Analyses via Sparsified Genomics" 
-> (2022). [link](https://doi.org/.....)
+> (2022). [link](https://arxiv.org/abs/2211.08157)
 
 Below is bibtex format for citation.
 
