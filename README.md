@@ -1,6 +1,6 @@
 # Genome-on-Diet: Taming Large-Scale Genomic Analyses via Sparsified Genomics 
 
-***:bulb:We are still updating the GitHub repo with more scripts and instructions. Please use it with caution!
+:bulb:We are still updating the GitHub repo with more scripts and instructions. Please use it with caution!
 
 Searching for similar genomic sequences is an essential and fundamental step in biomedical research and an overwhelming majority of genomic analyses. State-of-the-art computational methods performing such comparisons fail to cope with the exponential growth of genomic sequencing data. We are witnessing many tens of petabases (e.g., 17.5x10<sup>15</sup> bases in GenBank alone) of publicly available sequencing data. Global efforts are underway to identify the earth’s virome in preparation for the next pandemic and improve genomic diversity through building population-specific reference genomes. The genomic data that needs to be quickly analyzed will quickly grow with such efforts and ever-more powerful sequencing technologies (e.g., the portable Nanopore technology or the production-scale Illumina technology). 
 
