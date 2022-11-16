@@ -12,16 +12,30 @@ Described by Alser et al. (preliminary version at https://arxiv.org/abs/2211.081
 ## <a name="started"></a>Getting Started
 ```sh
 git clone https://github.com/CMU-SAFARI/Genome-on-Diet
-cd Genome-on-Diet/src && make
+cd Genome-on-Diet-SNPs-Indels && make
 
 # Illumina sequences
-./GoD_avx -t 40 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 -r 0.05,120,200 -n 0.9,0 --AF_max_loc 10 --secondary=yes ../Data/GRCh38.p14_NC_000001.11.fna ../Data/ERR240727_1.fastq
+./GDiet_avx --MD -t 40 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 -r 0.05,100,400 -n 0.9,0.25 --AF_max_loc 10 --secondary=yes -a -o Illumina/Genome-on-Diet-GRCh38-Illumina-stats_INDEL_SNP_k21w11.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
 
 # HiFi sequences
-./GoD_avx -t 40 -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 0.04,400,800 -n 0.8,0.005  --AF_max_loc 10 --sort=merge --secondary=yes ../Data/GRCh38.p14_NC_000001.11.fna ../Data/PBmixSequel729_1_A01_PBTH_30hours_19kbV2PD_70pM_HumanHG003.fastq
+./GDiet_avx -t 40 --MD -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 0.04,400,800 -n 0.8,0.005 --AF_max_loc 10 --sort=merge --frag=no -F200,1 --secondary=yes -a -o HiFi/Genome-on-Diet-GRCh38-HiFi-stats_INDEL_SNP_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq"
 
 # ONT sequences
-./GoD_avx -t 40 -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 0.04,400,800 -n 0.2,0.0005 --AF_max_loc 10 --sort=merge --secondary=yes ../Data/GRCh38.p14_NC_000001.11.fna ../Data/GM24149_1_300filtered_2Mreads.fastq
+./GDiet_avx -t 40 --MD -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 0.04,400,800 -n 0.2,0.005 --AF_max_loc 10 --sort=merge --frag=no -F200,1 --secondary=yes -a -o ONT/Genome-on-Diet-GRCh38-ONT-stats_INDEL_SNP_k15w10.sam GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq    
+```
+
+```sh
+git clone https://github.com/CMU-SAFARI/Genome-on-Diet
+cd Genome-on-Diet-SNPs-Indels-SVs && make
+
+# Illumina sequences
+./GDiet_avx -t 40 --MD -ax sr -Z 10 -W 2 -i 0.2 -k 21 -w 11 -N 1 -r 200 --vt_dis=100 --vt_nb_loc=10 --vt_df1=0.011 --vt_df2=0.15 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Illumina/Genome-on-Diet-GRCh38-Illumina-stats_SV_k21w11.sam ../Data//GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
+
+# HiFi sequences
+./GDiet_avx -t 40 --MD -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 1000 --vt_dis=800 --vt_nb_loc=10 --vt_df1=0.011 --vt_df2=0.15 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o HiFi/Genome-on-Diet-GRCh38-HiFi-stats_SV_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq
+
+# ONT sequences
+./GDiet_avx -t 40 --MD -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 1500 --vt_dis=1000 --vt_nb_loc=10 --vt_df1=0.01 --vt_df2=0.01 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o ONT/Genome-on-Diet-GRCh38-ONT-stats_SV_k15w10.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq
 ```
 
 ## Table of Contents
