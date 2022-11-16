@@ -18,7 +18,7 @@ cd Genome-on-Diet-SNPs-Indels && make
 ./GDiet_avx --MD -t 40 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 -r 0.05,100,400 -n 0.9,0.25 --AF_max_loc 10 --secondary=yes -a -o Illumina/Genome-on-Diet-GRCh38-Illumina-stats_INDEL_SNP_k21w11.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
 
 # HiFi sequences
-./GDiet_avx -t 40 --MD -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 0.04,400,800 -n 0.8,0.005 --AF_max_loc 10 --sort=merge --frag=no -F200,1 --secondary=yes -a -o HiFi/Genome-on-Diet-GRCh38-HiFi-stats_INDEL_SNP_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq"
+./GDiet_avx -t 40 --MD -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 0.04,400,800 -n 0.8,0.005 --AF_max_loc 10 --sort=merge --frag=no -F200,1 --secondary=yes -a -o HiFi/Genome-on-Diet-GRCh38-HiFi-stats_INDEL_SNP_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq
 
 # ONT sequences
 ./GDiet_avx -t 40 --MD -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 0.04,400,800 -n 0.2,0.005 --AF_max_loc 10 --sort=merge --frag=no -F200,1 --secondary=yes -a -o ONT/Genome-on-Diet-GRCh38-ONT-stats_INDEL_SNP_k15w10.sam GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq    
