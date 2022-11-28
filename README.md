@@ -49,12 +49,12 @@ cd Genome-on-Diet-SNPs-Indels-SVs && make
 - [Getting help](#contact)
 - [Citing Genome-on-Diet](#cite)
 
-##  <a name="idea"></a>The key Idea 
+##  <a name="idea"></a>The Key Idea 
 We now need more than ever to catalyze and greatly accelerate genomic analyses by addressing the four critical limitations. Our goal is to enable ultra-fast and highly-efficient indexing and seeding steps in various genomic analyses so that pre-building genome indexes for each genome assembly is no longer a requirement for quickly and directly running large-scale genomic analyses using large genomes and various versions of genome assembly.
 
 We introduce the new concept of sparsified genomics where we systematically exclude a large number of bases from genomic sequences and enable the processing of the sparsified, shorter genomic sequence while maintaining the same or better accuracy than that of processing non-sparsified sequences. We exploit redundancy in genomic sequences to eliminate some regions in the genomic sequences to reduce the input workload of each step of genomic analysis and accelerate overall performance (check te figure below). To demonstrate the benefits of sparsified genomics in real genomic applications, we introduce Genome-on-Diet, the first highly parallel, memory-frugal, and accurate framework for sparsifying genomic sequences.
 
-Genome-on-Diet is based on four key ideas. 
+Genome-on-Diet is based on four major ideas. 
 1. Using a repeating pattern sequence to decide on which base in the genomic sequence should be excluded and which one should be included. The pattern sequence is a user-defined shortest repeating substring that represents included and excluded bases by 1’s and 0’s, respectively. Genome-on-Diet provides lossless compression to genomic sequences as it only manipulates a copy of the genomic sequence that is used for the initial steps of an analysis, such as indexing and seeding. The original genomic sequence is still maintained for performing accuracy-critical steps of an analysis, such as base-level sequence alignment where all bases must be accounted for.
 2. Inferring at which location of the query sequence the pattern should be applied in order to correctly match the included bases of the query sequence with the included bases of the target sequences. Applying the pattern always starting from the first base of the read sequence can lead to poor results due to a possible lack of seed matches.
 3. Providing a highly parallel and highly optimized implementation using modern single-instruction multiple-data (SIMD) instructions employed in modern microprocessors.
