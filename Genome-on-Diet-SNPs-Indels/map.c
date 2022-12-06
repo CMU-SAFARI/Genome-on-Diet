@@ -299,7 +299,7 @@ static void collect_seed_hits(void *km, const mm_mapopt_t *opt, int max_occ, con
 			uint32_t loc      = (uint32_t)r[k] >> 1;
 			uint64_t chrom_id = r[k] >> 32;
 			if (str) { // reverse strand
-				loc                           = loc + qpos - q->q_span + 1;
+				loc                           = loc + qpos;
 				buf_rev[query_len_rev].target = (chrom_id << 32) | loc;
 				buf_rev[query_len_rev].query  = qpos;
 				query_len_rev++;
@@ -394,7 +394,7 @@ static void collect_seed_hits_radix(void *km, const mm_mapopt_t *opt, int max_oc
 			uint32_t loc      = (uint32_t)r[k] >> 1;
 			uint64_t chrom_id = r[k] >> 32;
 			if (str) { // reverse strand
-				loc                           = loc + qpos - q->q_span + 1;
+				loc                           = loc + qpos;
 				buf_rev[query_len_rev].target = (chrom_id << 32) | loc;
 				buf_rev[query_len_rev].query  = qpos;
 				query_len_rev++;
@@ -585,9 +585,8 @@ static inline void vote(const loc_t *const loc, const unsigned len, const int st
 
 void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **seqs, int *n_regs, mm_reg1_t **regs,
                  mm_tbuf_t *b, const mm_mapopt_t *opt, const char *qname) {
-	int i, j, qlen_sum;
-	uint32_t hash;
-	mm128_v mv = {0, 0, 0};
+	unsigned qlen_sum = 0;
+	mm128_v mv        = {0, 0, 0};
 
 	int Pattern_Num_Ones = 0;
 	for (int f = 0; f < opt->pattern_len; ++f) {
@@ -596,15 +595,12 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 		}
 	}
 
-	for (i = 0, qlen_sum = 0; i < n_segs; ++i)
+	for (unsigned i = 0; i < n_segs; ++i)
 		qlen_sum += qlens[i], n_regs[i] = 0, regs[i] = 0;
 
 	if (qlen_sum == 0 || n_segs <= 0 || n_segs > MM_MAX_SEG) return;
 	if (opt->max_qlen > 0 && qlen_sum > opt->max_qlen) return;
 
-	hash = qname && !(opt->flag & MM_F_NO_HASH_NAME) ? __ac_X31_hash_string(qname) : 0;
-	hash ^= __ac_Wang_hash(qlen_sum) + __ac_Wang_hash(opt->seed);
-	hash = __ac_Wang_hash(hash);
 	PROF_INIT;
 	PROF_START;
 
@@ -625,7 +621,6 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 	uint32_t max_nb_seeds =
 	    (opt->flag & MM_F_FRAG_MODE) ? ((opt->max_frag_len == 0) ? 800 : opt->max_frag_len) : UINT32_MAX;
 
-	unsigned max_nb_rounds         = (opt->max_nb_rounds == 0) ? 1 : opt->max_nb_rounds;
 	unsigned bw                    = (float)(qlens[0] * opt->bw_frac);
 	float threshold_frac           = opt->min_cnt;
 	const float rec_threshold_frac = opt->rec_threshold_frac;
@@ -634,75 +629,66 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 	} else if (opt->bw_max < bw) {
 		bw = opt->bw_max;
 	}
-	vt_t recovery          = {.score = 0};
-	uint32_t extracted_len = 0;
-	unsigned round_nb      = 0;
-	while (vt.nb_potentials == 0 && extracted_len < qlens[0] - mi->k + 1 && round_nb < max_nb_rounds) {
-		round_nb++;
+	vt_t recovery = {.score = 0};
 
-		PROF_START;
-		unsigned tmp_extracted_len =
-		    collect_minimizers(b->km, opt, mi, qlens[0] - extracted_len, &seqs[0][extracted_len], &mv,
-		                       opt->pattern, opt->pattern_len, shift, max_nb_seeds);
-		if (opt->q_occ_frac > 0.0f) mm_seed_mz_flt(b->km, &mv, opt->mid_occ, opt->q_occ_frac); // checks freq
-		loc_t *a_for;
-		loc_t *a_rev;
-		unsigned n_a_for, n_a_rev;
+	PROF_START;
+	unsigned tmp_extracted_len = collect_minimizers(b->km, opt, mi, qlens[0], seqs[0], &mv, opt->pattern,
+	                                                opt->pattern_len, shift, max_nb_seeds);
+	if (opt->q_occ_frac > 0.0f) mm_seed_mz_flt(b->km, &mv, opt->mid_occ, opt->q_occ_frac); // checks freq
+	loc_t *a_for;
+	loc_t *a_rev;
+	unsigned n_a_for, n_a_rev;
 
-		if (opt->flag & MM_F_RADIX_SORT) {
-			collect_seed_hits_radix(b->km, opt, opt->mid_occ, mi, qname, &mv, qlen_sum, tmp_extracted_len,
-			                        &a_for, &a_rev, &n_a_for, &n_a_rev);
-		} else {
-			collect_seed_hits(b->km, opt, opt->mid_occ, mi, qname, &mv, qlen_sum, tmp_extracted_len, &a_for,
-			                  &a_rev, &n_a_for, &n_a_rev, opt->flag & MM_F_HEAP_SORT);
+	if (opt->flag & MM_F_RADIX_SORT) {
+		collect_seed_hits_radix(b->km, opt, opt->mid_occ, mi, qname, &mv, qlen_sum, tmp_extracted_len, &a_for,
+		                        &a_rev, &n_a_for, &n_a_rev);
+	} else {
+		collect_seed_hits(b->km, opt, opt->mid_occ, mi, qname, &mv, qlen_sum, tmp_extracted_len, &a_for, &a_rev,
+		                  &n_a_for, &n_a_rev, opt->flag & MM_F_HEAP_SORT);
+	}
+	kfree(b->km, mv.a);
+
+	if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
+		fprintf(stderr, "RS n_a_for: %u, n_a_rev: %u\n", n_a_for, n_a_rev);
+		for (unsigned i = 0; i < n_a_for; ++i) {
+			fprintf(stderr, "SD\t%s\t%d\t+\t%u\n", mi->seq[a_for[i].target >> 32].name,
+			        (int32_t)a_for[i].target + 1 - tmp_extracted_len, a_for[i].query);
 		}
-
-		if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
-			fprintf(stderr, "RS n_a_for: %u, n_a_rev: %u\n", n_a_for, n_a_rev);
-			for (i = 0; i < n_a_for; ++i) {
-				fprintf(stderr, "SD\t%s\t%d\t+\t%u\n", mi->seq[a_for[i].target >> 32].name,
-				        (int32_t)a_for[i].target + 1 - tmp_extracted_len - extracted_len,
-				        a_for[i].query);
-			}
-			for (i = 0; i < n_a_rev; ++i) {
-				fprintf(stderr, "SD\t%s\t%d\t-\t%u\n", mi->seq[a_rev[i].target >> 32].name,
-				        (uint32_t)a_rev[i].target - extracted_len + 1, a_rev[i].query);
-			}
+		for (unsigned i = 0; i < n_a_rev; ++i) {
+			fprintf(stderr, "SD\t%s\t%d\t-\t%u\n", mi->seq[a_rev[i].target >> 32].name,
+			        (uint32_t)a_rev[i].target + 1, a_rev[i].query);
 		}
-		PROF_END(pf_seeding);
-		PROF_START;
+	}
+	PROF_END(pf_seeding);
+	PROF_START;
 
-		int VT_MAX_NB_LOCATIONS = opt->AF_max_loc;
+	int VT_MAX_NB_LOCATIONS = opt->AF_max_loc;
 
-		unsigned vt_threshold = (opt->flag & MM_F_FRAG_MODE && tmp_extracted_len < qlen_sum)
-		                            ? (float)max_nb_seeds * threshold_frac
-		                            : (float)mv.n * threshold_frac;
+	unsigned vt_threshold = (opt->flag & MM_F_FRAG_MODE && tmp_extracted_len < qlen_sum)
+	                            ? (float)max_nb_seeds * threshold_frac
+	                            : (float)mv.n * threshold_frac;
 
-		unsigned vt_rec_threshold = (opt->flag & MM_F_FRAG_MODE && tmp_extracted_len < qlen_sum)
-		                                ? (float)max_nb_seeds * rec_threshold_frac
-		                                : (float)mv.n * rec_threshold_frac;
-		if (vt_threshold == 0) {
-			vt_threshold = 1;
-		}
-
-		// fprintf(stderr, "MAX_NB_SEEDS: %u, AF_NB_SEEDS_THRESHOLD %f\n", MAX_NB_SEEDS, AF_NB_SEEDS_THRESHOLD);
-		/*
-		if ((af_threshold > average_minimizer_no) || (af_threshold == 0))
-		        af_threshold = (float)average_minimizer_no * 0.1;
-		        */
-
-		vote(a_for, n_a_for, 0, &vt, bw, extracted_len, tmp_extracted_len, &recovery, vt_threshold,
-		     VT_MAX_NB_LOCATIONS, vt_rec_threshold);
-		vote(a_rev, n_a_rev, 1, &vt, bw, extracted_len, tmp_extracted_len, &recovery, vt_threshold,
-		     VT_MAX_NB_LOCATIONS, vt_rec_threshold);
-		kfree(b->km, a_for);
-		kfree(b->km, a_rev);
-		PROF_END(pf_voting);
-
-		extracted_len += tmp_extracted_len;
+	unsigned vt_rec_threshold = (opt->flag & MM_F_FRAG_MODE && tmp_extracted_len < qlen_sum)
+	                                ? (float)max_nb_seeds * rec_threshold_frac
+	                                : (float)mv.n * rec_threshold_frac;
+	if (vt_threshold == 0) {
+		vt_threshold = 1;
 	}
 
-	kfree(b->km, mv.a);
+	// fprintf(stderr, "MAX_NB_SEEDS: %u, AF_NB_SEEDS_THRESHOLD %f\n", MAX_NB_SEEDS, AF_NB_SEEDS_THRESHOLD);
+	/*
+	if ((af_threshold > average_minimizer_no) || (af_threshold == 0))
+	        af_threshold = (float)average_minimizer_no * 0.1;
+	        */
+
+	vote(a_for, n_a_for, 0, &vt, bw, 0, tmp_extracted_len, &recovery, vt_threshold, VT_MAX_NB_LOCATIONS,
+	     vt_rec_threshold);
+	vote(a_rev, n_a_rev, 1, &vt, bw, 0, tmp_extracted_len, &recovery, vt_threshold, VT_MAX_NB_LOCATIONS,
+	     vt_rec_threshold);
+	kfree(b->km, a_for);
+	kfree(b->km, a_rev);
+	PROF_END(pf_voting);
+
 	if (vt.nb_potentials == 0) {
 		if (recovery.score == 0) {
 			kfree(b->km, vt.potentials);
@@ -718,7 +704,7 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 
 	if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
 		fprintf(stderr, "VT n: %u, len: %u\n", vt.nb_potentials, qlen_sum);
-		for (i = 0; i < vt.nb_potentials; ++i) {
+		for (unsigned i = 0; i < vt.nb_potentials; ++i) {
 			const vt_t potential    = vt.potentials[i];
 			const char *chrom_name  = mi->seq[potential.chrom_id].name;
 			const int32_t chrom_len = mi->seq[potential.chrom_id].len;
@@ -780,6 +766,9 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 		unsigned target_id = vt.potentials[i].chrom_id;
 		uint32_t start_offset;
 		uint32_t end_offset;
+		if (str) {
+			vt.potentials[i].target_loc -= (mi->k - 1);
+		}
 		int32_t target_start = vt.potentials[i].target_loc;
 		int32_t target_end   = vt.potentials[i].target_loc;
 
@@ -792,6 +781,7 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 				}
 				continue;
 			}
+			// TODO: check here
 			start_offset = vt.potentials[i].first_query_loc - (mi->k - 1);
 			end_offset   = vt.potentials[i].last_query_loc;
 			if (str) {
@@ -917,7 +907,7 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 
 				if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
 					fprintf(stderr, "\nCigar: ");
-					for (j = 0; j < ez.n_cigar; ++j)
+					for (unsigned j = 0; j < ez.n_cigar; ++j)
 						fprintf(stderr, "%d%c", ez.cigar[j] >> 4, "MIDNSH"[ez.cigar[j] & 0xf]);
 					fprintf(stderr, "\n");
 				}

@@ -899,7 +899,7 @@ static void collect_seed_hits(void *km, const mm_mapopt_t *opt, int max_occ, con
 			uint32_t loc      = (uint32_t)r[k] >> 1;
 			uint64_t chrom_id = r[k] >> 32;
 			if (str) { // reverse strand
-				loc                           = loc + qpos - q->q_span + 1;
+				loc                           = loc + qpos;
 				buf_rev[query_len_rev].target = (chrom_id << 32) | loc;
 				buf_rev[query_len_rev].query  = qpos;
 				query_len_rev++;
@@ -1223,7 +1223,7 @@ void vote_2(const loc_t *const loc, const unsigned len, const int str, vt_t *con
 		}
 		// Else check the number of votes we have
 		else {
-			if (counter > best_vt.score) {
+			if (counter > best_vt.score && last_query_loc < max && first_query_loc > min) {
 				if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
 					fprintf(stderr,
 					        "VT2 counter: %d, target: [%d, %d], query: [%d, %d], vt_dist: %u\n",
@@ -1234,12 +1234,12 @@ void vote_2(const loc_t *const loc, const unsigned len, const int str, vt_t *con
 
 				uint32_t chrom_id = first_target_loc >> 32;
 				best_vt           = (vt_t){.chrom_id         = chrom_id,
-                                                 .first_target_loc = (uint32_t)first_target_loc,
-                                                 .last_target_loc  = (uint32_t)last_target_loc,
-                                                 .first_query_loc  = (uint32_t)first_query_loc,
-                                                 .last_query_loc   = (uint32_t)last_query_loc,
-                                                 .str              = str,
-                                                 .score            = counter};
+				                           .first_target_loc = (uint32_t)first_target_loc,
+				                           .last_target_loc  = (uint32_t)last_target_loc,
+				                           .first_query_loc  = (uint32_t)first_query_loc,
+				                           .last_query_loc   = (uint32_t)last_query_loc,
+				                           .str              = str,
+				                           .score            = counter};
 			}
 			const uint64_t loc_tmp =
 			    str ? (cur.target - cur.query) : cur.target - (tmp_extracted_len - cur.query);
@@ -1251,7 +1251,7 @@ void vote_2(const loc_t *const loc, const unsigned len, const int str, vt_t *con
 			counter          = 1;
 		}
 	}
-	if (counter > best_vt.score) {
+	if (counter > best_vt.score && last_query_loc < max && first_query_loc > min) {
 		if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
 			fprintf(stderr, "VT2 counter: %d, target: [%d, %d], query: [%d, %d], vt_dist: %u\n", counter,
 			        (int32_t)(first_target_loc & UINT32_MAX), (int32_t)(last_target_loc & UINT32_MAX),
@@ -1260,12 +1260,12 @@ void vote_2(const loc_t *const loc, const unsigned len, const int str, vt_t *con
 
 		uint32_t chrom_id = first_target_loc >> 32;
 		best_vt           = (vt_t){.chrom_id         = chrom_id,
-                                 .first_target_loc = (uint32_t)first_target_loc,
-                                 .last_target_loc  = (uint32_t)last_target_loc,
-                                 .first_query_loc  = (uint32_t)first_query_loc,
-                                 .last_query_loc   = (uint32_t)last_query_loc,
-                                 .str              = str,
-                                 .score            = counter};
+		                           .first_target_loc = (uint32_t)first_target_loc,
+		                           .last_target_loc  = (uint32_t)last_target_loc,
+		                           .first_query_loc  = (uint32_t)first_query_loc,
+		                           .last_query_loc   = (uint32_t)last_query_loc,
+		                           .str              = str,
+		                           .score            = counter};
 	}
 	*vt = best_vt;
 }
@@ -1425,7 +1425,7 @@ void mm_map_frag(const mm_idx_t *mi, int n_segs, const int *qlens, const char **
 	if (qlen_sum - end > coverage_threshold) {
 		vt_t vt2 = {.score = 0};
 		vote_2(a_for, n_a_for, 0, &vt2, opt->vt_dis, tmp_extracted_len, end, qlen_sum);
-		vote_2(a_rev, n_a_rev, 1, &vt2, opt->vt_dis, tmp_extracted_len, 0, start);
+		vote_2(a_rev, n_a_rev, 1, &vt2, opt->vt_dis, tmp_extracted_len, end, qlen_sum);
 		if (mm_dbg_flag & MM_DBG_PRINT_SEED) {
 			const char *chrom_name = mi->seq[vt2.chrom_id].name;
 			fprintf(stderr, "VT2: score: %u, chrom: %s, loc: %u, df2: %f\n", vt2.score, chrom_name,
