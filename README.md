@@ -2,14 +2,15 @@
 
 We introduce the new concept of sparsified genomics where we systematically exclude a large number of bases from genomic sequences and enable the processing of the sparsified, shorter genomic sequence while maintaining the same or better accuracy than that of processing non-sparsified sequences. We deomonstrate significant benefits over sttate-of-the-art read mapper, minimap2.
 
-**Genome-on-Diet is multithreaded and it exploits modern machines with AVX-512 support for high performance.** When users do NOT have such machines, Genome-on-Diet still works efficiently on traditional machines with SSE and non-SIMD machines.
-
 Described by Alser et al. (preliminary version at https://arxiv.org/abs/2211.08157).
+
+**Genome-on-Diet is multithreaded and it exploits modern machines with AVX-512 support for high performance.** When users do NOT have such machines, Genome-on-Diet still works efficiently on traditional machines with SSE and non-SIMD machines. When building Genome-on-Diet using make command, youu will recieve four executable files,  . Genome-on-Diet is debugged and tested using gcc 12.1.0-16.
 
 ![alt text](https://github.com/CMU-SAFARI/Genome-on-Diet/blob/main/RawResults/GDiet-vs-minimap2.png?raw=true)
 
 ## Table of Contents
-- [Getting Started](#started)
+- [Installation & General usage](#install)
+- [Use Cases](#usecases)
 - [Key Idea](#idea)
 - [Benefits of Genome-on-Diet](#results)
 - [Using Genome-on-Diet](#usage)
@@ -17,21 +18,33 @@ Described by Alser et al. (preliminary version at https://arxiv.org/abs/2211.081
 - [Getting help](#contact)
 - [Citing Genome-on-Diet](#cite)
 
-## <a name="started"></a>Getting Started
+## <a name="install"></a>Installation & General usage
 ```sh
 git clone https://github.com/CMU-SAFARI/Genome-on-Diet
+make -C Genome-on-Diet/GDiet-ShortReads
+make -C Genome-on-Diet/GDiet-LongReads
 
+#Wihout AVX-512 acceleraion:                    
+GDiet [options] <target.fa>|<target.idx> [query.fa] [...]
+#With AVX-512 acceleration:                     
+GDiet_avx [options] <target.fa>|<target.idx> [query.fa] [...]
+#With AVX-512-accelerated Indexing/Sketching:   
+GDiet_sketch_avx [options] <target.fa>|<target.idx> [query.fa] [...]
+#With AVX-512-accelerated Sequencing Alignment: 
+GDiet_ksw2_avx [options] <target.fa>|<target.idx> [query.fa] [...]
+```   
+        
+        
+## <a name="usecases"></a>Use Cases
+```sh
 # Illumina sequences
-cd Genome-on-Diet/GDiet-ShortReads && make
-./GDiet_avx -t 1 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 -r 0.05,150,200 -n 0.95,0.3 -s 100 --AF_max_loc 2 --secondary=yes -a -o Genome-on-Diet-GRCh38-Illumina_k21w11.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
+Genome-on-Diet/GDiet-ShortReads/GDiet_avx -t 1 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 -r 0.05,150,200 -n 0.95,0.3 -s 100 --AF_max_loc 2 --secondary=yes -a -o Genome-on-Diet-GRCh38-Illumina_k21w11.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
 
 # HiFi sequences
-cd Genome-on-Diet/GDiet-LongReads && make
-./GDiet_avx -t 1 -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 1000 --vt_dis=650 --vt_nb_loc=5 --vt_df1=0.0106 --vt_df2=0.2 -s 400 --vt_cov 0.04 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Genome-on-Diet-GRCh38-HiFi_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq
+Genome-on-Diet/GDiet-LongReads/GDiet_avx -t 1 -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 1000 --vt_dis=650 --vt_nb_loc=5 --vt_df1=0.0106 --vt_df2=0.2 -s 400 --vt_cov 0.04 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Genome-on-Diet-GRCh38-HiFi_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq
 
 # ONT sequences
-cd Genome-on-Diet/GDiet-LongReads && make
-./GDiet_avx -t 1 -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 1300 --vt_dis=1000 --vt_nb_loc=3 --vt_df1=0.007 --vt_df2=0.007 --max_min_gap=4000 --vt_f=0.04 -s 35000 --vt_cov 0.3 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Genome-on-Diet-GRCh38-ONT_k15w10.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq
+Genome-on-Diet/GDiet-LongReads/GDiet_avx -t 1 -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 1300 --vt_dis=1000 --vt_nb_loc=3 --vt_df1=0.007 --vt_df2=0.007 --max_min_gap=4000 --vt_f=0.04 -s 35000 --vt_cov 0.3 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Genome-on-Diet-GRCh38-ONT_k15w10.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq
 ```
 
 
