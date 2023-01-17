@@ -2,6 +2,8 @@
 
 We introduce the new concept of sparsified genomics where we systematically exclude a large number of bases from genomic sequences and enable the processing of the sparsified, shorter genomic sequence while maintaining the same or better accuracy than that of processing non-sparsified sequences. We deomonstrate significant benefits over sttate-of-the-art read mapper, minimap2.
 
+**Genome-on-Diet is multithreaded and it exploits modern machines with AVX-512 support for high performance.** When users do NOT have such machines, Genome-on-Diet still works efficiently on traditional machines with SSE and non-SIMD machines.
+
 Described by Alser et al. (preliminary version at https://arxiv.org/abs/2211.08157).
 
 ![alt text](https://github.com/CMU-SAFARI/Genome-on-Diet/blob/main/RawResults/GDiet-vs-minimap2.png?raw=true)
@@ -51,7 +53,7 @@ Genome-on-Diet is based on four major ideas.
 ##  <a name="results"></a>Benefits of Genome-on-Diet 
 Sparsifying genomic sequences makes large-scale analyses feasible and efficient. The use of ‘1110’, ‘110’, ‘10’, and ‘100’ patterns accelerates the analyses we evaluated by 1.3x, 1.4x, 1.9x, and 2.7x, respectively, showing a reduction in the execution time by almost 1/4, 1/3, 1/2, and 2/3, respectively. This demonstrates that the execution time scales linearly with the number of zeros determined in the pattern sequence. The use of ‘1110’, ‘110’, ‘10’, and ‘100’ patterns also directly reduces the size of the index by 1/4, 1/3, 1/2, and 2/3, respectively.
 
-Sparsifying genomic sequences greatly accelerates state-of-the-art read mappers by 1.54-8.8x using real Illumina, HiFi, and ONT reads, while providing a higher number of mapped reads with the highest mapping quality and more detected indels and complex structural variations. Sparsifying genomic sequences makes containment search through very large genomes and very large databases 72.7-75.88x faster and 723.3x more space-efficient than searching through non-sparsified genomic sequences. Sparsifying genomic sequences enables robust microbiome discovery by providing 54.15-61.88x faster and 720x more space-efficient taxonomic profiling of metagenomic samples.
+Sparsifying genomic sequences greatly accelerates state-of-the-art read mappers by 2.57-5.38x, 1.13-2.78x, and 3.52-6.28x using real Illumina, HiFi, and ONT reads, respectively, while providing a higher number of mapped reads with the highest mapping quality and more detected indels and complex structural variations. Sparsifying genomic sequences makes containment search through very large genomes and very large databases 72.7-75.88x faster and 723.3x more space-efficient than searching through non-sparsified genomic sequences. Sparsifying genomic sequences enables robust microbiome discovery by providing 54.15-61.88x faster and 720x more space-efficient taxonomic profiling of metagenomic samples.
 
 ##  <a name="usage"></a>Using Genome-on-Diet:
 The concept of sparsified genomics can be implemented and leveraged using different implementations and algorithms.
@@ -61,16 +63,16 @@ We introduce one way to implement sparsified genomics using highly-efficient and
 ```
 Genome-on-Diet-master
 ├───1. Data
-└───2. Genome-on-Diet-SNPs-Indels-SVs
-└───3. Genome-on-Diet-SNPs-Indels
+└───2. GDiet-LongReads
+└───3. GDiet-ShortReads
 ├───4. ReproducibleEvaluation
     └───5. ReadMapping      
 ├───6. RawResults
 ├───7. Figures
 ```            
 1. In the "Data" directory, you will find a description of the sequencing reads and metagenomic reads that we used in our evaluation. You will also find details on how to obtain the reference genomes and RefSeq database that we used in our evaluation. This enables you to use the scripts we have in the "ReproducibleEvaluation" directory to reproduce the exact same experimental evaluations.
-2. In the "Genome-on-Diet-SNPs-Indels-SVs" directory, you will find the source code of the Genome-on-Diet-SVs implementation. We use the source code of minimap2 as a baseline, where we applied our changes directly to minimap2. This enables researchers that are familiar with the source code of minimap2 to be also familiar with the source code of Genome-on-Diet with minimal efforts.
-3. In the "Genome-on-Diet-SNPs-Indels" directory, you will find the source code of the Genome-on-Diet implementation. We use the source code of minimap2 as a baseline, where we applied our changes directly to minimap2. This enables researchers that are familiar with the source code of minimap2 to be also familiar with the source code of Genome-on-Diet with minimal efforts.
+2. In the "GDiet-LongReads" directory, you will find the source code of the Genome-on-Diet implementation for long reads, such as CLR, HiFi, and ONT reads. We use the source code of minimap2 as a baseline, where we applied our changes directly to minimap2. This enables researchers that are familiar with the source code of minimap2 to be also familiar with the source code of Genome-on-Diet with minimal efforts.
+3. In the "GDiet-ShortReads" directory, you will find the source code of the Genome-on-Diet implementation for shortt reads, such as Illumina reads. We use the source code of minimap2 as a baseline, where we applied our changes directly to minimap2. This enables researchers that are familiar with the source code of minimap2 to be also familiar with the source code of Genome-on-Diet with minimal efforts.
 4. In the "ReproducibleEvaluation" directory, you will find all shell scripts and commands we used to run the experimental evaluations we presented in the paper.
 6. In the "RawResults" directory, you will find all raw results and exact values that we presented in the paper.
 7. In the "Figures" directory, you will find the highh-quality figures that we included in the paper.
