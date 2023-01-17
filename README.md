@@ -1,44 +1,10 @@
 # Genome-on-Diet: Taming Large-Scale Genomic Analyses via Sparsified Genomics 
 
-![alt text](https://github.com/CMU-SAFARI/Genome-on-Diet/blob/main/RawResults/GDiet-vs-minimap2.png?raw=true)
-
-Searching for similar genomic sequences is an essential and fundamental step in biomedical research and an overwhelming majority of genomic analyses. State-of-the-art computational methods performing such comparisons fail to cope with the exponential growth of genomic sequencing data. We are witnessing many tens of petabases (e.g., 17.5x10<sup>15</sup> bases in GenBank alone) of publicly available sequencing data. Global efforts are underway to identify the earth’s virome in preparation for the next pandemic and improve genomic diversity through building population-specific reference genomes. The genomic data that needs to be quickly analyzed will quickly grow with such efforts and ever-more powerful sequencing technologies (e.g., the portable Nanopore technology or the production-scale Illumina technology). 
-
-State-of-the-art methods remain computationally expensive due to calculating all possible overlapping seeds (along with their hash values) sequentially before deciding on which seed to consider for indexing and querying and which seed to exclude. Even after excluding a large number of seeds, these methods generate a multifold larger index (10-21x larger in size when the reference genome is 2-bit encoded) compared to the indexed sequence. Examining large indexes requires very powerful computing infrastructure, which limits the portability and scalability of the analysis. We now need more than ever to catalyze and greatly accelerate genomic analyses by enabling ultra-fast and highly-efficient indexing and querying of large-scale genomic data.
-
-We introduce the concept of sparsified genomics where we systematically exclude a large number of bases from genomic sequences and enable much faster and more memory-efficient processing of the sparsified, shorter genomic sequences, while providing similar or even higher accuracy compared to processing non-sparsified sequences. Sparsified genomics provides significant benefits to many genomic analyses and has broad applicability. We show that sparsifying genomic sequences greatly accelerates the state-of-the-art read mapper (minimap2) by 1.54-8.8x using real Illumina, HiFi, and ONT reads, while providing a higher number of mapped reads and more detected small and structural variations. Sparsifying genomic sequences makes containment search through very large genomes and very large databases 72.7-75.88x faster and 723.3x more storage-efficient than searching through non-sparsified genomic sequences (with CMash and KMC3). Sparsifying genomic sequences enables robust microbiome discovery by providing 54.15-61.88x faster and 720x more storage-efficient taxonomic profiling of metagenomic samples over the state-of-art tool (Metalign).
+We introduce the new concept of sparsified genomics where we systematically exclude a large number of bases from genomic sequences and enable the processing of the sparsified, shorter genomic sequence while maintaining the same or better accuracy than that of processing non-sparsified sequences. We deomonstrate significant benefits over sttate-of-the-art read mapper, minimap2.
 
 Described by Alser et al. (preliminary version at https://arxiv.org/abs/2211.08157).
 
-
-## <a name="started"></a>Getting Started
-```sh
-git clone https://github.com/CMU-SAFARI/Genome-on-Diet
-cd Genome-on-Diet-SNPs-Indels && make
-
-# Illumina sequences
-./GDiet_avx --MD -t 40 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 -r 0.05,100,400 -n 0.9,0.25 --AF_max_loc 10 --secondary=yes -a -o Illumina/Genome-on-Diet-GRCh38-Illumina-stats_INDEL_SNP_k21w11.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
-
-# HiFi sequences
-./GDiet_avx -t 40 --MD -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 0.04,400,800 -n 0.8,0.005 --AF_max_loc 10 --sort=merge --frag=no -F200,1 --secondary=yes -a -o HiFi/Genome-on-Diet-GRCh38-HiFi-stats_INDEL_SNP_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq
-
-# ONT sequences
-./GDiet_avx -t 40 --MD -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 0.04,400,800 -n 0.2,0.005 --AF_max_loc 10 --sort=merge --frag=no -F200,1 --secondary=yes -a -o ONT/Genome-on-Diet-GRCh38-ONT-stats_INDEL_SNP_k15w10.sam GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq    
-```
-
-```sh
-git clone https://github.com/CMU-SAFARI/Genome-on-Diet
-cd Genome-on-Diet-SNPs-Indels-SVs && make
-
-# Illumina sequences
-./GDiet_avx -t 40 --MD -ax sr -Z 10 -W 2 -i 0.2 -k 21 -w 11 -N 1 -r 200 --vt_dis=100 --vt_nb_loc=10 --vt_df1=0.011 --vt_df2=0.15 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Illumina/Genome-on-Diet-GRCh38-Illumina-stats_SV_k21w11.sam ../Data//GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
-
-# HiFi sequences
-./GDiet_avx -t 40 --MD -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 1000 --vt_dis=800 --vt_nb_loc=10 --vt_df1=0.011 --vt_df2=0.15 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o HiFi/Genome-on-Diet-GRCh38-HiFi-stats_SV_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq
-
-# ONT sequences
-./GDiet_avx -t 40 --MD -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 1500 --vt_dis=1000 --vt_nb_loc=10 --vt_df1=0.01 --vt_df2=0.01 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o ONT/Genome-on-Diet-GRCh38-ONT-stats_SV_k15w10.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq
-```
+![alt text](https://github.com/CMU-SAFARI/Genome-on-Diet/blob/main/RawResults/GDiet-vs-minimap2.png?raw=true)
 
 ## Table of Contents
 - [Getting Started](#started)
@@ -48,6 +14,24 @@ cd Genome-on-Diet-SNPs-Indels-SVs && make
 - [Directory Structure](#directory)
 - [Getting help](#contact)
 - [Citing Genome-on-Diet](#cite)
+
+## <a name="started"></a>Getting Started
+```sh
+git clone https://github.com/CMU-SAFARI/Genome-on-Diet
+
+# Illumina sequences
+cd Genome-on-Diet/GDiet-ShortReads && make
+./GDiet_avx -t 1 -ax sr -Z 10 -W 2 -i 2 -k 21 -w 11 -N 1 -r 0.05,150,200 -n 0.95,0.3 -s 100 --AF_max_loc 2 --secondary=yes -a -o Genome-on-Diet-GRCh38-Illumina_k21w11.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/D1_S1_L001_R1_001-017.fastq
+
+# HiFi sequences
+cd Genome-on-Diet/GDiet-LongReads && make
+./GDiet_avx -t 1 -ax map-hifi -Z 10 -W 2 -i 0.2 -k 19 -w 19 -N 1 -r 1000 --vt_dis=650 --vt_nb_loc=5 --vt_df1=0.0106 --vt_df2=0.2 -s 400 --vt_cov 0.04 --max_min_gap=4000 --vt_f=0.04 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Genome-on-Diet-GRCh38-HiFi_k19w19.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/m64011_190830_220126.fastq
+
+# ONT sequences
+cd Genome-on-Diet/GDiet-LongReads && make
+./GDiet_avx -t 1 -ax map-ont -Z 10 -W 2 -i 0.2 -k 15 -w 10 -N 1 -r 1300 --vt_dis=1000 --vt_nb_loc=3 --vt_df1=0.007 --vt_df2=0.007 --max_min_gap=4000 --vt_f=0.04 -s 35000 --vt_cov 0.3 --sort=merge --frag=no -F200,1 --secondary=yes -a -o Genome-on-Diet-GRCh38-ONT_k15w10.sam ../Data/GCA_000001405.15_GRCh38_no_alt_analysis_set.fasta ../Data/HG002_ONT-UL_GIAB_20200204_1000filtered_2Mreads.fastq
+```
+
 
 ##  <a name="idea"></a>The Key Idea 
 We now need more than ever to catalyze and greatly accelerate genomic analyses by addressing the four critical limitations. Our goal is to enable ultra-fast and highly-efficient indexing and seeding steps in various genomic analyses so that pre-building genome indexes for each genome assembly is no longer a requirement for quickly and directly running large-scale genomic analyses using large genomes and various versions of genome assembly.
