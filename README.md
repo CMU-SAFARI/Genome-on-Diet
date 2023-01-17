@@ -4,7 +4,7 @@ We introduce the new concept of sparsified genomics where we systematically excl
 
 Described by Alser et al. (preliminary version at https://arxiv.org/abs/2211.08157).
 
-**Genome-on-Diet is multithreaded and it exploits modern machines with AVX-512 support for high performance.** When users do NOT have such machines, Genome-on-Diet still works efficiently on traditional machines with SSE and non-SIMD machines. When building Genome-on-Diet using make command, youu will recieve four executable files ([Check here for details](#install)). Genome-on-Diet is debugged and tested using gcc 12.1.0-16.
+**Genome-on-Diet is multithreaded and it exploits modern machines with AVX-512 support for high performance.** When users do NOT have such machines, Genome-on-Diet still works efficiently on traditional machines with SSE and non-SIMD machines. When building Genome-on-Diet using make command, you will recieve four executable files ([Check here for details](#install)). Genome-on-Diet is debugged and tested using gcc 12.1.0-16.
 
 ![alt text](https://github.com/CMU-SAFARI/Genome-on-Diet/blob/main/RawResults/GDiet-vs-minimap2.png?raw=true)
 
