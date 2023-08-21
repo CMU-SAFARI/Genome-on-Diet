@@ -1,8 +1,8 @@
 
 
-sed 's./..g' /CAMI-datasets/CAMI_high/RH_S001__insert_270.fq > /CAMI-datasets/CAMI_high/RH_S001__insert_270_SingleEnd.fq
+#sed 's./..g' /CAMI-datasets/CAMI_high/RH_S001__insert_270.fq > /CAMI-datasets/CAMI_high/RH_S001__insert_270_SingleEnd.fq
 
-sed 's./..g' /CAMI-datasets/CAMI_low/RL_S001__insert_270.fq > /CAMI-datasets/CAMI_low/RL_S001__insert_270_SingleEnd.fq
+#sed 's./..g' /CAMI-datasets/CAMI_low/RL_S001__insert_270.fq > /CAMI-datasets/CAMI_low/RL_S001__insert_270_SingleEnd.fq
 
 
 #################################################       
