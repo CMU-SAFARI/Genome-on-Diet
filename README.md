@@ -109,7 +109,7 @@ Below is bibtex format for citation.
 @article{Genome-on-Diet2022,
     author = {Alser, Mohammed and Eudine, Julien and Mutlu, Onur},
     title = "{Taming Large-Scale Genomic Analyses via Sparsified Genomics}",
-    year = {2020},
+    year = {2022},
 }
 ```
 
